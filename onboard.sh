@@ -26,8 +26,19 @@ for REPO in "${REPOSITORIES[@]}"; do
     echo "Cloning $REPO..."
     git clone https://github.com/CapsuleCompany/$REPO.git src/$REPO
   else
-    echo "Repository $REPO already exists. Pulling latest changes..."
-    git -C src/$REPO pull
+    echo "Repository $REPO already exists. Checking for changes..."
+    cd "src/$REPO"
+
+    # Stash any local changes
+    if [ -n "$(git status --porcelain)" ]; then
+      echo "Stashing local changes for $REPO..."
+      git stash save "Stashed by onboard.sh on $(date)"
+    fi
+
+    # Pull the latest changes
+    echo "Pulling latest changes for $REPO..."
+    git pull --rebase
+    cd -
   fi
 done
 
