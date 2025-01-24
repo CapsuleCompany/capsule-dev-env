@@ -11,6 +11,8 @@ providers:
   file:
     directory: "/etc/traefik/conf"
     watch: true
+  docker:
+    exposedByDefault: false
 
 log:
   level: DEBUG

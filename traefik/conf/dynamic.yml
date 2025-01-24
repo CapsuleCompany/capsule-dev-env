@@ -1,7 +1,7 @@
 http:
   routers:
     traefik-dashboard:
-      rule: "Host(`traefik.dev.capsule.com`)"
+      rule: "Host(`traefik.dev.capsuleio.com`)"
       service: api@internal
       entryPoints:
         - web
