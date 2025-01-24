@@ -1,16 +1,36 @@
 version: '3.8'
 
 services:
-  capsule-service:
+  traefik:
+    image: traefik:v2.9
+    container_name: traefik
+    command:
+      - --api.insecure=true
+      - --providers.docker=true
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"        # HTTP
+      - "8080:8080"    # Traefik Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+      - ./traefik/conf:/etc/traefik/conf
+
+    networks:
+      - web
+
+  frontend:
     build:
       context: ./src/capsule-service
       dockerfile: Dockerfile
     volumes:
       - ./src/capsule-service:/app
-    ports:
-      - "3000:3000"
-    environment:
-      - ENV=development
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.capsule-service.rule=Host(`capsule.localhost`)"
+      - "traefik.http.services.capsule-service.loadbalancer.server.port=3000"
+    networks:
+      - web
 
   location-service:
     build:
@@ -18,12 +38,14 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./src/location-service-api:/app
-    ports:
-      - "8002:8000"
-    environment:
-      - ENV=development
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.location-service.rule=Host(`location.localhost`)"
+      - "traefik.http.services.location-service.loadbalancer.server.port=8000"
     depends_on:
       - db
+    networks:
+      - web
 
   notification-service:
     build:
@@ -31,12 +53,14 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./src/notification-service-api:/app
-    ports:
-      - "8003:8000"
-    environment:
-      - ENV=development
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.notification-service.rule=Host(`notification.localhost`)"
+      - "traefik.http.services.notification-service.loadbalancer.server.port=8000"
     depends_on:
       - db
+    networks:
+      - web
 
   payment-service:
     build:
@@ -44,12 +68,14 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./src/payment-service-api:/app
-    ports:
-      - "8004:8000"
-    environment:
-      - ENV=development
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.payment-service.rule=Host(`payment.localhost`)"
+      - "traefik.http.services.payment-service.loadbalancer.server.port=8000"
     depends_on:
       - db
+    networks:
+      - web
 
   schedule-service:
     build:
@@ -57,12 +83,14 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./src/schedule-service-api:/app
-    ports:
-      - "8005:8000"
-    environment:
-      - ENV=development
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.schedule-service.rule=Host(`schedule.localhost`)"
+      - "traefik.http.services.schedule-service.loadbalancer.server.port=8000"
     depends_on:
       - db
+    networks:
+      - web
 
   user-service:
     build:
@@ -70,12 +98,14 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./src/user-service-api:/app
-    ports:
-      - "8006:8000"
-    environment:
-      - ENV=development
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.user-service.rule=Host(`user.localhost`)"
+      - "traefik.http.services.user-service.loadbalancer.server.port=8000"
     depends_on:
       - db
+    networks:
+      - web
 
   db:
     image: postgres:15
@@ -87,6 +117,12 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
+    networks:
+      - web
 
 volumes:
   postgres_data:
+
+networks:
+  web:
+    driver: bridge

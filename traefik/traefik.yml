@@ -1,0 +1,16 @@
+api:
+  dashboard: true
+
+entryPoints:
+  web:
+    address: ":80"
+  dashboard:
+    address: ":8080"
+
+providers:
+  file:
+    directory: "/etc/traefik/conf"
+    watch: true
+
+log:
+  level: DEBUG
