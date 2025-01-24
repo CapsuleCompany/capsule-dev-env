@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  capsule-service:
+    build:
+      context: ./src/capsule-service
+      dockerfile: Dockerfile
+    volumes:
+      - ./src/capsule-service:/app
+    ports:
+      - "3000:3000"
+    environment:
+      - ENV=development
+
+  location-service:
+    build:
+      context: ./src/location-service-api
+      dockerfile: Dockerfile
+    volumes:
+      - ./src/location-service-api:/app
+    ports:
+      - "8002:8000"
+    environment:
+      - ENV=development
+    depends_on:
+      - db
+
+  notification-service:
+    build:
+      context: ./src/notification-service-api
+      dockerfile: Dockerfile
+    volumes:
+      - ./src/notification-service-api:/app
+    ports:
+      - "8003:8000"
+    environment:
+      - ENV=development
+    depends_on:
+      - db
+
+  payment-service:
+    build:
+      context: ./src/payment-service-api
+      dockerfile: Dockerfile
+    volumes:
+      - ./src/payment-service-api:/app
+    ports:
+      - "8004:8000"
+    environment:
+      - ENV=development
+    depends_on:
+      - db
+
+  schedule-service:
+    build:
+      context: ./src/schedule-service-api
+      dockerfile: Dockerfile
+    volumes:
+      - ./src/schedule-service-api:/app
+    ports:
+      - "8005:8000"
+    environment:
+      - ENV=development
+    depends_on:
+      - db
+
+  user-service:
+    build:
+      context: ./src/user-service-api
+      dockerfile: Dockerfile
+    volumes:
+      - ./src/user-service-api:/app
+    ports:
+      - "8006:8000"
+    environment:
+      - ENV=development
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
