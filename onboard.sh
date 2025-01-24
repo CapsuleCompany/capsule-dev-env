@@ -1,25 +1,65 @@
 #!/bin/bash
 
+# Exit immediately if a command exits with a non-zero status
 set -e
 
-# Ensure src/ directory exists
+echo "=== Initializing Development Environment ==="
+
+# Ensure the src/ directory exists
+echo "Ensuring src/ directory exists..."
 mkdir -p src
 
-# Clone repositories into src/
-echo "Cloning repositories..."
-git clone https://github.com/your-org/capsule-service.git src/capsule-service
-git clone https://github.com/your-org/location-service-api.git src/location-service-api
-git clone https://github.com/your-org/notification-service-api.git src/notification-service-api
-git clone https://github.com/your-org/payment-service-api.git src/payment-service-api
-git clone https://github.com/your-org/schedule-service-api.git src/schedule-service-api
-git clone https://github.com/your-org/user-service-api.git src/user-service-api
+# List of repositories to clone
+REPOSITORIES=(
+  "capsule-service"
+  "location-service-api"
+  "notification-service-api"
+  "payment-service-api"
+  "schedule-service-api"
+  "user-service-api"
+)
 
-# Copy .env file
-echo "Setting up environment variables..."
-cp .env.example .env || echo ".env already exists"
+# Clone or update each repository
+echo "Cloning or updating repositories..."
+for REPO in "${REPOSITORIES[@]}"; do
+  if [ ! -d "src/$REPO/.git" ]; then
+    echo "Cloning $REPO..."
+    git clone https://github.com/CapsuleCompany/$REPO.git src/$REPO
+  else
+    echo "Repository $REPO already exists. Pulling latest changes..."
+    git -C src/$REPO pull
+  fi
+done
 
-# Build and start services
-echo "Building and starting services..."
+# Check if .env file exists; if not, create it from .env.example
+if [ ! -f ".env" ]; then
+  if [ -f ".env.example" ]; then
+    echo "Creating .env from .env.example..."
+    cp .env.example .env
+  else
+    echo "Error: .env.example not found. Please create it manually."
+    exit 1
+  fi
+else
+  echo ".env file already exists. Skipping creation."
+fi
+
+# Verify required environment variables
+echo "Checking environment variables in .env..."
+if ! grep -q POSTGRES_USER .env || ! grep -q POSTGRES_PASSWORD .env || ! grep -q POSTGRES_DB .env; then
+  echo "Error: Missing required environment variables in .env."
+  echo "Please ensure POSTGRES_USER, POSTGRES_PASSWORD, and POSTGRES_DB are defined."
+  exit 1
+fi
+
+# Log environment file usage
+echo "Using the following .env file:"
+cat .env
+
+# Build and start Docker services
+echo "Building and starting Docker containers..."
 docker-compose up --build -d
 
-echo "All services are running!"
+echo "=== Development Environment Setup Complete ==="
+echo "Services are running! Use 'docker-compose ps' to check the status of your containers."
+echo "Access Capsule Service (Next.js) at http://localhost:3000"
