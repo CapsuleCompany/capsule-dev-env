@@ -43,6 +43,7 @@ services:
       - .env
     volumes:
       - ./src/location-service-api:/app
+      - .env:/app/.env
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.location-api.rule=PathPrefix(`/location`)"
@@ -62,6 +63,7 @@ services:
       - .env
     volumes:
       - ./src/notification-service-api:/app
+      - .env:/app/.env
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.notification-api.rule=PathPrefix(`/notification`)"
@@ -81,6 +83,7 @@ services:
       - .env
     volumes:
       - ./src/payment-service-api:/app
+      - .env:/app/.env
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.payment-api.rule=PathPrefix(`/payment`)"
@@ -100,6 +103,7 @@ services:
       - .env
     volumes:
       - ./src/schedule-service-api:/app
+      - .env:/app/.env
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.schedule-api.rule=PathPrefix(`/schedule`)"
