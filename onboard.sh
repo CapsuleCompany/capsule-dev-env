@@ -11,12 +11,13 @@ mkdir -p src
 
 # List of repositories to clone
 REPOSITORIES=(
-  "capsule-service"
+  "capsule-service-app"
   "location-service-api"
   "notification-service-api"
   "payment-service-api"
   "schedule-service-api"
   "user-service-api"
+  "services-service-api"
 )
 
 # Clone or update each repository

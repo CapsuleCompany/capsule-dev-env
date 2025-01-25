@@ -20,18 +20,18 @@ services:
 
   frontend:
     build:
-      context: ./src/capsule-service
+      context: ./src/capsule-service-app
       dockerfile: Dockerfile
     volumes:
-      - ./src/capsule-service:/app
+      - ./src/capsule-service-app:/app
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.capsule-service.rule=PathPrefix(`/`)"
-      - "traefik.http.services.capsule-service.loadbalancer.server.port=3000"
+      - "traefik.http.routers.capsule.rule=Host(`dev.capsuleio.com`)"
+      - "traefik.http.services.capsule.loadbalancer.server.port=3000"
     networks:
       - web
 
-  location-service:
+  location-api:
     build:
       context: ./src/location-service-api
       dockerfile: Dockerfile
@@ -39,14 +39,14 @@ services:
       - ./src/location-service-api:/app
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.location-service.rule=PathPrefix(`/location`)"
-      - "traefik.http.services.location-service.loadbalancer.server.port=8000"
+      - "traefik.http.routers.location-api.rule=PathPrefix(`/location`)"
+      - "traefik.http.services.location-api.loadbalancer.server.port=8000"
     depends_on:
       - db
     networks:
       - web
 
-  notification-service:
+  notification-api:
     build:
       context: ./src/notification-service-api
       dockerfile: Dockerfile
@@ -54,14 +54,14 @@ services:
       - ./src/notification-service-api:/app
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.notification-service.rule=PathPrefix(`/notification`)"
-      - "traefik.http.services.notification-service.loadbalancer.server.port=8000"
+      - "traefik.http.routers.notification-api.rule=PathPrefix(`/notification`)"
+      - "traefik.http.services.notification-api.loadbalancer.server.port=8000"
     depends_on:
       - db
     networks:
       - web
 
-  payment-service:
+  payment-api:
     build:
       context: ./src/payment-service-api
       dockerfile: Dockerfile
@@ -69,14 +69,14 @@ services:
       - ./src/payment-service-api:/app
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.payment-service.rule=PathPrefix(`/payment`)"
-      - "traefik.http.services.payment-service.loadbalancer.server.port=8000"
+      - "traefik.http.routers.payment-api.rule=PathPrefix(`/payment`)"
+      - "traefik.http.services.payment-api.loadbalancer.server.port=8000"
     depends_on:
       - db
     networks:
       - web
 
-  schedule-service:
+  schedule-api:
     build:
       context: ./src/schedule-service-api
       dockerfile: Dockerfile
@@ -84,14 +84,29 @@ services:
       - ./src/schedule-service-api:/app
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.schedule-service.rule=PathPrefix(`/schedule`)"
-      - "traefik.http.services.schedule-service.loadbalancer.server.port=8000"
+      - "traefik.http.routers.schedule-api.rule=PathPrefix(`/schedule`)"
+      - "traefik.http.services.schedule-api.loadbalancer.server.port=8000"
     depends_on:
       - db
     networks:
       - web
 
-  user-service:
+  service-api:
+    build:
+      context: ./src/services-service-api
+      dockerfile: Dockerfile
+    volumes:
+      - ./src/services-service-api:/app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.services-api.rule=PathPrefix(`/service`)"
+      - "traefik.http.services.services-api.loadbalancer.server.port=8000"
+    depends_on:
+      - db
+    networks:
+      - web
+
+  user-api:
     build:
       context: ./src/user-service-api
       dockerfile: Dockerfile
@@ -99,8 +114,8 @@ services:
       - ./src/user-service-api:/app
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.user-service.rule=PathPrefix(`/user`)"
-      - "traefik.http.services.user-service.loadbalancer.server.port=8000"
+      - "traefik.http.routers.user-api.rule=PathPrefix(`/auth`)"
+      - "traefik.http.services.user-api.loadbalancer.server.port=8000"
     depends_on:
       - db
     networks:
