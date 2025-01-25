@@ -49,6 +49,7 @@ services:
       - "traefik.http.services.location-api.loadbalancer.server.port=8000"
     depends_on:
       - db
+      - traefik
     networks:
       - web
 
@@ -67,6 +68,7 @@ services:
       - "traefik.http.services.notification-api.loadbalancer.server.port=8000"
     depends_on:
       - db
+      - traefik
     networks:
       - web
 
@@ -85,6 +87,7 @@ services:
       - "traefik.http.services.payment-api.loadbalancer.server.port=8000"
     depends_on:
       - db
+      - traefik
     networks:
       - web
 
@@ -103,6 +106,7 @@ services:
       - "traefik.http.services.schedule-api.loadbalancer.server.port=8000"
     depends_on:
       - db
+      - traefik
     networks:
       - web
 
@@ -115,12 +119,14 @@ services:
       - .env
     volumes:
       - ./src/services-service-api:/app
+      - .env:/app/.env
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.services-api.rule=PathPrefix(`/service`)"
       - "traefik.http.services.services-api.loadbalancer.server.port=8000"
     depends_on:
       - db
+      - traefik
     networks:
       - web
 
@@ -140,6 +146,7 @@ services:
       - "traefik.http.services.user-api.loadbalancer.server.port=8000"
     depends_on:
       - db
+      - traefik
     networks:
       - web
 
@@ -148,6 +155,9 @@ services:
     image: postgres:15
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - .env:/app/.env
+    env_file:
+      - .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
