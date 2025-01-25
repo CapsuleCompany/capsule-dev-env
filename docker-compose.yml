@@ -19,9 +19,12 @@ services:
       - web
 
   frontend:
+    container_name: frontend
     build:
       context: ./src/capsule-service-app
       dockerfile: Dockerfile
+    env_file:
+      - .env
     volumes:
       - ./src/capsule-service-app:/app
     labels:
@@ -32,9 +35,12 @@ services:
       - web
 
   location-api:
+    container_name: location-api
     build:
       context: ./src/location-service-api
       dockerfile: Dockerfile
+    env_file:
+      - .env
     volumes:
       - ./src/location-service-api:/app
     labels:
@@ -47,9 +53,12 @@ services:
       - web
 
   notification-api:
+    container_name: notification-api
     build:
       context: ./src/notification-service-api
       dockerfile: Dockerfile
+    env_file:
+      - .env
     volumes:
       - ./src/notification-service-api:/app
     labels:
@@ -62,9 +71,12 @@ services:
       - web
 
   payment-api:
+    container_name: payment-api
     build:
       context: ./src/payment-service-api
       dockerfile: Dockerfile
+    env_file:
+      - .env
     volumes:
       - ./src/payment-service-api:/app
     labels:
@@ -77,9 +89,12 @@ services:
       - web
 
   schedule-api:
+    container_name: schedule-api
     build:
       context: ./src/schedule-service-api
       dockerfile: Dockerfile
+    env_file:
+      - .env
     volumes:
       - ./src/schedule-service-api:/app
     labels:
@@ -92,9 +107,12 @@ services:
       - web
 
   service-api:
+    container_name: service-api
     build:
       context: ./src/services-service-api
       dockerfile: Dockerfile
+    env_file:
+      - .env
     volumes:
       - ./src/services-service-api:/app
     labels:
@@ -107,11 +125,15 @@ services:
       - web
 
   user-api:
+    container_name: user-api
     build:
       context: ./src/user-service-api
       dockerfile: Dockerfile
+    env_file:
+      - .env
     volumes:
       - ./src/user-service-api:/app
+      - .env:/app/.env
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.user-api.rule=PathPrefix(`/auth`)"
@@ -122,6 +144,7 @@ services:
       - web
 
   db:
+    container_name: postgres
     image: postgres:15
     volumes:
       - postgres_data:/var/lib/postgresql/data
