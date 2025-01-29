@@ -53,7 +53,81 @@ services:
     networks:
       - web
 
-  # Add other services like notification-api, payment-api, etc. here...
+  notification-api:
+    container_name: notification-api
+    build:
+      context: ./src/notification-service-api
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./src/notification-service-api:/app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.notification-api.rule=PathPrefix(`/api/notification`)"
+      - "traefik.http.services.notification-api.loadbalancer.server.port=8000"
+    depends_on:
+      - db
+      - traefik
+    networks:
+      - web
+
+  payment-api:
+    container_name: payment-api
+    build:
+      context: ./src/payment-service-api
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./src/payment-service-api:/app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.payment-api.rule=PathPrefix(`/api/payment`)"
+      - "traefik.http.services.payment-api.loadbalancer.server.port=8000"
+    depends_on:
+      - db
+      - traefik
+    networks:
+      - web
+
+  schedule-api:
+    container_name: schedule-api
+    build:
+      context: ./src/schedule-service-api
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./src/schedule-service-api:/app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.schedule-api.rule=PathPrefix(`/api/schedule`)"
+      - "traefik.http.services.schedule-api.loadbalancer.server.port=8000"
+    depends_on:
+      - db
+      - traefik
+    networks:
+      - web
+
+  service-api:
+    container_name: service-api
+    build:
+      context: ./src/services-service-api
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./src/services-service-api:/app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.services-api.rule=PathPrefix(`/api/service`)"
+      - "traefik.http.services.services-api.loadbalancer.server.port=8000"
+    depends_on:
+      - db
+      - traefik
+    networks:
+      - web
 
   user-api:
     container_name: user-api
@@ -80,7 +154,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file:
-      - .env
+      - .env  # This will load variables from .env
     ports:
       - "5432:5432"
     environment:
@@ -126,6 +200,26 @@ services:
       KAFKA_HEAP_OPTS: ${KAFKA_HEAP_OPTS}
     ports:
       - "9092:9092"
+    networks:
+      - web
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafdrop
+    depends_on:
+      - zookeeper
+      - kafka
+    environment:
+      KAFKA_BROKERCONNECT: "kafka:9092"
+      JVM_OPTS: "-Xms32M -Xmx64M"
+      SERVER_PORT: 9000
+      ZK_HOSTS: "zookeeper:2181"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kafdrop.rule=Host(`kafdrop.dev.capsuleio.com`)"
+      - "traefik.http.services.kafdrop.loadbalancer.server.port=9000"
+    ports:
+      - "9001:9000"
     networks:
       - web
 
