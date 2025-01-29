@@ -43,10 +43,9 @@ services:
       - .env
     volumes:
       - ./src/location-service-api:/app
-      - .env:/app/.env
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.location-api.rule=PathPrefix(`/location`)"
+      - "traefik.http.routers.location-api.rule=PathPrefix(`/api/location`) || PathPrefix(`/api/routing`)"
       - "traefik.http.services.location-api.loadbalancer.server.port=8000"
     depends_on:
       - db
@@ -54,85 +53,7 @@ services:
     networks:
       - web
 
-  notification-api:
-    container_name: notification-api
-    build:
-      context: ./src/notification-service-api
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    volumes:
-      - ./src/notification-service-api:/app
-      - .env:/app/.env
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.notification-api.rule=PathPrefix(`/notification`)"
-      - "traefik.http.services.notification-api.loadbalancer.server.port=8000"
-    depends_on:
-      - db
-      - traefik
-    networks:
-      - web
-
-  payment-api:
-    container_name: payment-api
-    build:
-      context: ./src/payment-service-api
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    volumes:
-      - ./src/payment-service-api:/app
-      - .env:/app/.env
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.payment-api.rule=PathPrefix(`/payment`)"
-      - "traefik.http.services.payment-api.loadbalancer.server.port=8000"
-    depends_on:
-      - db
-      - traefik
-    networks:
-      - web
-
-  schedule-api:
-    container_name: schedule-api
-    build:
-      context: ./src/schedule-service-api
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    volumes:
-      - ./src/schedule-service-api:/app
-      - .env:/app/.env
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.schedule-api.rule=PathPrefix(`/schedule`)"
-      - "traefik.http.services.schedule-api.loadbalancer.server.port=8000"
-    depends_on:
-      - db
-      - traefik
-    networks:
-      - web
-
-  service-api:
-    container_name: service-api
-    build:
-      context: ./src/services-service-api
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    volumes:
-      - ./src/services-service-api:/app
-      - .env:/app/.env
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.services-api.rule=PathPrefix(`/service`)"
-      - "traefik.http.services.services-api.loadbalancer.server.port=8000"
-    depends_on:
-      - db
-      - traefik
-    networks:
-      - web
+  # Add other services like notification-api, payment-api, etc. here...
 
   user-api:
     container_name: user-api
@@ -143,10 +64,9 @@ services:
       - .env
     volumes:
       - ./src/user-service-api:/app
-      - .env:/app/.env
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.user-api.rule=PathPrefix(`/auth`)"
+      - "traefik.http.routers.user-api.rule=PathPrefix(`/api/auth`)"
       - "traefik.http.services.user-api.loadbalancer.server.port=8000"
     depends_on:
       - db
@@ -159,15 +79,53 @@ services:
     image: postgres:15
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - .env:/app/.env
     env_file:
       - .env
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.capsule.rule=Host(`db`)"
+    networks:
+      - web
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_CLIENT_PORT}
+      ZOOKEEPER_TICK_TIME: ${ZOOKEEPER_TICK_TIME}
+    env_file:
+      - .env
     ports:
-      - "5432:5432"
+      - "2181:2181"
+    networks:
+      - web
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka
+    env_file:
+      - .env
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: ${KAFKA_BROKER_ID}
+      KAFKA_ZOOKEEPER_CONNECT: ${KAFKA_ZOOKEEPER_CONNECT}
+      KAFKA_ADVERTISED_LISTENERS: ${KAFKA_ADVERTISED_LISTENERS}
+      KAFKA_LISTENERS: ${KAFKA_LISTENERS}
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
+      KAFKA_LOG_RETENTION_HOURS: ${KAFKA_LOG_RETENTION_HOURS}
+      KAFKA_MAX_REQUEST_SIZE: ${KAFKA_MAX_REQUEST_SIZE}
+      KAFKA_MESSAGE_MAX_BYTES: ${KAFKA_MESSAGE_MAX_BYTES}
+      KAFKA_REPLICA_FETCH_MAX_BYTES: ${KAFKA_REPLICA_FETCH_MAX_BYTES}
+      KAFKA_HEAP_OPTS: ${KAFKA_HEAP_OPTS}
+    ports:
+      - "9092:9092"
     networks:
       - web
 
