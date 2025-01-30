@@ -213,13 +213,10 @@ services:
       KAFKA_BROKERCONNECT: "kafka:9092"
       JVM_OPTS: "-Xms32M -Xmx64M"
       SERVER_PORT: 9000
-      ZK_HOSTS: "zookeeper:2181"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.kafdrop.rule=Host(`kafdrop.dev.capsuleio.com`)"
       - "traefik.http.services.kafdrop.loadbalancer.server.port=9000"
-    ports:
-      - "9001:9000"
     networks:
       - web
 
