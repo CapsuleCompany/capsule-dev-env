@@ -27,6 +27,9 @@ services:
       - .env
     volumes:
       - ./src/capsule-service-app:/app
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=frontend
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.capsule.rule=Host(`dev.capsuleio.com`)"
@@ -41,6 +44,9 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=location-api
     volumes:
       - ./src/location-service-api:/app
     labels:
@@ -60,6 +66,9 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=notification-api
     volumes:
       - ./src/notification-service-api:/app
     labels:
@@ -79,6 +88,9 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=payment-api
     volumes:
       - ./src/payment-service-api:/app
     labels:
@@ -98,6 +110,9 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=schedule-api
     volumes:
       - ./src/schedule-service-api:/app
     labels:
@@ -117,6 +132,9 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=service-api
     volumes:
       - ./src/services-service-api:/app
     labels:
@@ -136,6 +154,9 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=user-api
     volumes:
       - ./src/user-service-api:/app
     labels:
@@ -153,17 +174,51 @@ services:
     image: postgres:15
     volumes:
       - postgres_data:/var/lib/postgresql/data
+#      - ./init-scripts:/docker-entrypoint-initdb.d
     env_file:
-      - .env  # This will load variables from .env
+      - .env
     ports:
       - "5432:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+#    command: ["postgres", "-c", "wal_level=logical", "-c", "max_replication_slots=4", "-c", "max_wal_senders=4"]
+#    entrypoint: ["/bin/bash", "-c", "/docker-entrypoint-initdb.d/init.sh && exec docker-entrypoint.sh postgres"]
+#    entrypoint: ["/bin/bash", "-c", "docker-entrypoint.sh postgres & /docker-entrypoint-initdb.d/init.sh"]
+    networks:
+      - web
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=payment-api
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - web
+
+  redis-insight:
+    container_name: redis-insight
+    image: redislabs/redisinsight:latest
+    ports:
+      - "8001:8001"
+    volumes:
+      - redisinsight_data:/db
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+      - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.capsule.rule=Host(`db`)"
+      - "traefik.http.routers.redis-insight.rule=Host(`redis.dev.capsuleio.com`)"
+      - "traefik.http.services.redis-insight.loadbalancer.server.port=8001"
     networks:
       - web
 
@@ -187,6 +242,7 @@ services:
       - .env
     depends_on:
       - zookeeper
+      - traefik
     environment:
       KAFKA_BROKER_ID: ${KAFKA_BROKER_ID}
       KAFKA_ZOOKEEPER_CONNECT: ${KAFKA_ZOOKEEPER_CONNECT}
@@ -198,6 +254,8 @@ services:
       KAFKA_MESSAGE_MAX_BYTES: ${KAFKA_MESSAGE_MAX_BYTES}
       KAFKA_REPLICA_FETCH_MAX_BYTES: ${KAFKA_REPLICA_FETCH_MAX_BYTES}
       KAFKA_HEAP_OPTS: ${KAFKA_HEAP_OPTS}
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      OTEL_SERVICE_NAME: "kafka"
     ports:
       - "9092:9092"
     networks:
@@ -220,8 +278,65 @@ services:
     networks:
       - web
 
+  debezium-connect:
+    image: debezium/connect:2.3
+    container_name: debezium-connect
+    depends_on:
+      - kafka
+      - zookeeper
+      - db
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: "1"
+      CONFIG_STORAGE_TOPIC: "connect-configs"
+      OFFSET_STORAGE_TOPIC: "connect-offsets"
+      STATUS_STORAGE_TOPIC: "connect-status"
+      CONNECT_LOG_LEVEL: "INFO"
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_REST_ADVERTISED_HOST_NAME: "debezium-connect"
+      CONNECT_PLUGIN_PATH: "/kafka/connect"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_SERVICE_NAME: payment-api
+    ports:
+      - "8083:8083"
+    networks:
+      - web
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+      - "9411:9411"
+    networks:
+      - web
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    volumes:
+      - ./otel-config.yml:/etc/otel/config.yaml
+    command: ["--config=/etc/otel/config.yaml"]
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "55680:55680"
+    networks:
+      - web
+
 volumes:
   postgres_data:
+  redis_data:
+  redisinsight_data:
 
 networks:
   web:
