@@ -17,7 +17,7 @@ REPOSITORIES=(
   "payment-service-api"
   "schedule-service-api"
   "user-service-api"
-  "services-service-api"
+  "tenant-service-api"
 )
 
 # Clone or update each repository

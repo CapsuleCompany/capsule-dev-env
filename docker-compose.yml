@@ -130,9 +130,9 @@ services:
       - web
 
   service-api:
-    container_name: service-api
+    container_name: tenant-api
     build:
-      context: ./src/services-service-api
+      context: ./src/tenant-service-api
       dockerfile: Dockerfile
     env_file:
       - .env
@@ -141,11 +141,11 @@ services:
       - OTEL_SERVICE_NAME=service-api
       - PYTHONUNBUFFERED=1
     volumes:
-      - ./src/services-service-api:/app
+      - ./src/tenant-service-api:/app
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.services-api.rule=PathPrefix(`/api/service`)"
-      - "traefik.http.services.services-api.loadbalancer.server.port=8000"
+      - "traefik.http.routers.tenant-api.rule=PathPrefix(`/api/tenant`)"
+      - "traefik.http.services.tenant-api.loadbalancer.server.port=8000"
     depends_on:
       - db
       - traefik
