@@ -47,6 +47,7 @@ services:
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=location-api
+      - PYTHONUNBUFFERED=1
     volumes:
       - ./src/location-service-api:/app
     labels:
@@ -69,6 +70,7 @@ services:
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=notification-api
+      - PYTHONUNBUFFERED=1
     volumes:
       - ./src/notification-service-api:/app
     labels:
@@ -91,6 +93,7 @@ services:
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=payment-api
+      - PYTHONUNBUFFERED=1
     volumes:
       - ./src/payment-service-api:/app
     labels:
@@ -113,6 +116,7 @@ services:
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=schedule-api
+      - PYTHONUNBUFFERED=1
     volumes:
       - ./src/schedule-service-api:/app
     labels:
@@ -135,6 +139,7 @@ services:
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=service-api
+      - PYTHONUNBUFFERED=1
     volumes:
       - ./src/services-service-api:/app
     labels:
@@ -157,6 +162,7 @@ services:
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=user-api
+      - PYTHONUNBUFFERED=1
     volumes:
       - ./src/user-service-api:/app
     labels:
