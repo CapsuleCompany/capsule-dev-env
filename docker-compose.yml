@@ -144,7 +144,7 @@ services:
       - ./src/tenant-service-api:/app
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.tenant-api.rule=PathPrefix(`/api/tenant`)"
+      - "traefik.http.routers.tenant-api.rule=PathPrefix(`/api/tenant`) || PathPrefix(`/api/services`)"
       - "traefik.http.services.tenant-api.loadbalancer.server.port=8000"
     depends_on:
       - db
@@ -262,6 +262,10 @@ services:
       KAFKA_HEAP_OPTS: ${KAFKA_HEAP_OPTS}
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
       OTEL_SERVICE_NAME: "kafka"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kafka.rule=Host(`kafka.dev.capsuleio.com`)"
+      - "traefik.http.services.kafka.loadbalancer.server.port=9092"
     ports:
       - "9092:9092"
     networks:
