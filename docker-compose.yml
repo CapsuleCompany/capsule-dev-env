@@ -150,6 +150,7 @@ services:
     depends_on:
       - db
       - traefik
+      - kafka
     networks:
       - web
 
@@ -173,6 +174,8 @@ services:
     depends_on:
       - traefik
       - db
+      - kafka
+      - service-api
     networks:
       - web
 
